@@ -1,5 +1,3 @@
-# live-equation-editor
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-![](screenshot.png)
 
-Uses <a href=https://www.npmjs.com/package/react-katex>react-katex</a> to render LaTeX math equations

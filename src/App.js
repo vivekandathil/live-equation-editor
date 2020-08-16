@@ -1,17 +1,27 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
 import { Button, ButtonGroup, TextField, Paper } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import { DropzoneArea } from 'material-ui-dropzone';
+import { useDropzone } from 'react-dropzone';
+
+
+
 
 function App() {
 
   const classes = useStyles();
 
   const [latex, setLatex] = React.useState('\\text{Type your } \\LaTeX \\text{ code below, view it here!}');
+
+  const [files, setFiles] = React.useState([]);
+
+
+
+
 
   return (
     <div className="App">
@@ -46,6 +56,13 @@ function App() {
         <Button className={classes.button}>Save as Image</Button>
         <Button className={classes.button}>CLEAR</Button>
       </ButtonGroup>
+      <DropzoneArea
+        filesLimit={1}
+        dropzoneText={"Drag an equation image here to be scanned"}
+        onChange={(fileArray) => {
+          setFiles(fileArray);
+        }}
+      />
     </div>
   );
 }
@@ -65,7 +82,7 @@ const useStyles = makeStyles({
     height: 300,
     width: '48%',
     margin: 30,
-  }
+  },
 });
 
 export default App;
