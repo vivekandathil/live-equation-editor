@@ -16,6 +16,35 @@ function App() {
   const classes = useStyles();
   const [latex, setLatex] = React.useState('\\text{Type your } \\LaTeX \\text{ code below, view it here!}');
   const [files, setFiles] = React.useState([]);
+  const [image, setImage] = React.useState("");
+
+  function getBase64(file) {
+    const blob = new Blob([file], { type: 'image/jpg' })
+    var reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onload = function () {
+      // Remove the preceding image type statement from the string
+      // and set the URL to the encoded value
+      setImage(reader.result.split(',')[1]);
+      console.log(reader.result.split(',')[1]);
+      return reader.result.split(',')[1];
+    };
+    reader.onerror = function (error) {
+      console.log('Error: ', error);
+      return "error";
+    };
+  }
+
+  React.useEffect(() => {
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'app_id': 'vivekandath_gmail_com', 'app_key': '' },
+      body: JSON.stringify({ "src": `https://mathpix.com/examples/limit.jpg` })
+    };
+    fetch('https://api.mathpix.com/v3/text', requestOptions)
+      .then(response => response.json())
+      .then(data => setLatex(JSON.parse(JSON.stringify(data.latex_styled))));
+  }, [image]);
 
   return (
     <div className="App">
@@ -53,7 +82,10 @@ function App() {
         filesLimit={1}
         dropzoneText={"Drag an equation image here to be scanned"}
         onChange={(fileArray) => {
+          setImage(getBase64(fileArray[0]));
+          console.log(image);
           setFiles(fileArray);
+          console.log(fileArray);
         }}
       />
       <Wave fill="url(#gradient)">
