@@ -8,6 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { DropzoneArea } from 'material-ui-dropzone';
 import { useDropzone } from 'react-dropzone';
 
+import ReactLoading from 'react-loading';
 import Wave from 'react-wavify'
 
 function App() {
@@ -22,9 +23,9 @@ function App() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 40 }} >
 
         <Paper style={{ height: 100, width: '60%', padding: 10 }} elevation={3} >
-          <BlockMath math={String.raw`${latex}`}
+          <BlockMath math={(latex === "") ? `\\mathbb{CLEAR}` : String.raw`${latex}`}
             renderError={(error) => {
-              return <b>{error.name}: Still typing?</b>
+              return (<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 10 }}><ReactLoading type={"bubbles"} color={'#7303c0'} height={'5%'} width={'5%'} /></div>)
             }}
             errorColor={'#7303c0'} />
         </Paper>
