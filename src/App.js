@@ -1,60 +1,77 @@
 import React from 'react';
 import './App.css';
 
+// Used to render the latex code provided in the text field
 import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
 import { Button, ButtonGroup, TextField, Paper } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+// For the drag and drop functionality 
 import { DropzoneArea } from 'material-ui-dropzone';
-import { useDropzone } from 'react-dropzone';
-
+// A nicer thing to display in place of a ParseError (while the user is in the middle of typing latex)
 import ReactLoading from 'react-loading';
+// Wave animation at the bottom of the page
 import Wave from 'react-wavify'
+// To upload equation snippets to an S3 bucket
+import S3 from 'aws-s3';
+import { keys } from './keys.js';
+
+const config = {
+  bucketName: 'assets-vjk',
+  dirName: 'snippets',
+  region: 'ca-central-1',
+  accessKeyId: keys.s3ID,
+  secretAccessKey: keys.s3Secret,
+}
+
+// Generate a unique id string to name files uploaded to the S3 bucket
+function makeid(length) {
+  var result = '';
+  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
 
 function App() {
 
   const classes = useStyles();
-  const [latex, setLatex] = React.useState('\\text{Type your } \\LaTeX \\text{ code below, view it here!}');
+  // The latex code to be rendered
+  const [latex, setLatex] = React.useState('\\text{Type your } \\LaTeX \\text{ code below or drag/drop an image below. Your equation will show up here! }');
+  // The files from the dropzone
   const [files, setFiles] = React.useState([]);
   const [image, setImage] = React.useState("");
+  // Where to access the image to send to the OCR API
+  const [imageURL, setImageURL] = React.useState("");
 
-  function getBase64(file) {
-    const blob = new Blob([file], { type: 'image/jpg' })
-    var reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onload = function () {
-      // Remove the preceding image type statement from the string
-      // and set the URL to the encoded value
-      setImage(reader.result.split(',')[1]);
-      console.log(reader.result.split(',')[1]);
-      return reader.result.split(',')[1];
-    };
-    reader.onerror = function (error) {
-      console.log('Error: ', error);
-      return "error";
-    };
-  }
-
+  // Call the MathPix OCR API every time a new image is dragged/dropped
   React.useEffect(() => {
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'app_id': 'vivekandath_gmail_com', 'app_key': '' },
-      body: JSON.stringify({ "src": `https://mathpix.com/examples/limit.jpg` })
-    };
-    fetch('https://api.mathpix.com/v3/text', requestOptions)
-      .then(response => response.json())
-      .then(data => setLatex(JSON.parse(JSON.stringify(data.latex_styled))));
-  }, [image]);
+    if (imageURL !== "") {
+      const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'app_id': keys.email, 'app_key': keys.mathpix },
+        body: JSON.stringify({ "src": `${imageURL}` })
+      };
+      fetch('https://api.mathpix.com/v3/text', requestOptions)
+        .then(response => response.json())
+        .then(data => setLatex(JSON.parse(JSON.stringify(data.latex_styled))));
+    }
+  }, [imageURL])
 
   return (
     <div className="App">
-      <h1 style={{ fontFamily: 'Roboto' }}>Live Equation Editor</h1>
+      <h1 style={{ fontFamily: 'Roboto' }}>Live Equation Editor (vivekandathil)</h1>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 40 }} >
 
         <Paper style={{ height: 100, width: '60%', padding: 10 }} elevation={3} >
           <BlockMath math={(latex === "") ? `\\mathbb{CLEAR}` : String.raw`${latex}`}
             renderError={(error) => {
-              return (<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 10 }}><ReactLoading type={"bubbles"} color={'#7303c0'} height={'5%'} width={'5%'} /></div>)
+              return (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 10 }}>
+                  <ReactLoading type={"bubbles"} color={'#7303c0'} height={'5%'} width={'5%'} />
+                </div>)
             }}
             errorColor={'#7303c0'} />
         </Paper>
@@ -82,10 +99,18 @@ function App() {
         filesLimit={1}
         dropzoneText={"Drag an equation image here to be scanned"}
         onChange={(fileArray) => {
-          setImage(getBase64(fileArray[0]));
-          console.log(image);
+          // Upload the snippet to an S3 bucket with a randomized filename
+          const S3Client = new S3(config);
+          const fileName = `snippet_${makeid(8)}`;
+
+          // When resolved, change the imageURL to trigger the OCR API call
+          S3Client
+            .uploadFile(fileArray[0], fileName)
+            .then(data => setImageURL(data.location))
+            .catch(err => console.error(err));
+
+          // Set the current file to the image
           setFiles(fileArray);
-          console.log(fileArray);
         }}
       />
       <Wave fill="url(#gradient)">
