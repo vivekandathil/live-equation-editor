@@ -4,7 +4,7 @@
 - Use the buttons below to automatically open Symbolab/Wolfram in a new tab, passing in your equation as an input
 
 #### API/Library Usage
-- The Live Equation Editor uses the MathPix API to perform OCR on equation images
+- The MathPix API is used to perform OCR on equation images
 - The KaTeX typesetting library is used to render the TeX code
 
 ![](save4.gif)
