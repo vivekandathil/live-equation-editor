@@ -3,8 +3,6 @@
 - The TeX code can be easily edited; the equations will dynamically render on the page
 - Use the buttons below to automatically open Symbolab/Wolfram in a new tab, passing in your equation as an input
 
-![](save3.gif)
-
 #### API/Library Usage
 - The Live Equation Editor uses the MathPix API to perform OCR on equation images
 - The KaTeX typesetting library is used to render the TeX code
