@@ -8,5 +8,5 @@
 - The MathPix API is used to perform OCR on equation images
 - The KaTeX typesetting library is used to render the TeX code
 
-![](save4.gif)
+![](EquationEditor.gif)
 
